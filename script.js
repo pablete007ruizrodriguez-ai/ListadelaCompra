@@ -1,4 +1,5 @@
-const userInput = document.getElementById('userInput');
+const RAW_URL = 'https://raw.githubusercontent.com/pablete007ruizrodriguez-ai/ListadelaCompra/main/datos.json';
+
 const productInput = document.getElementById('productInput');
 const supermarketSelect = document.getElementById('supermarketSelect');
 const locationSelect = document.getElementById('locationSelect');
@@ -6,53 +7,45 @@ const addBtn = document.getElementById('addBtn');
 const shoppingList = document.getElementById('shoppingList');
 const errorMessage = document.getElementById('errorMessage');
 
-// Cargar usuario local
-userInput.value = localStorage.getItem('lastUser') || '';
+let currentItems = [];
 
-// Cargar la lista al iniciar
-loadItems();
+// Cargar la lista al abrir y reconsultar cada 5 segundos
+loadFromGitHub();
+setInterval(loadFromGitHub, 5000);
 
 addBtn.addEventListener('click', addItem);
 
-function addItem() {
-  const author = userInput.value.trim();
-  const text = productInput.value.trim();
-  const superVal = supermarketSelect.value;
-  const locVal = locationSelect.value;
-
-  // Validación obligatoria
-  if (!author || !text || !superVal || !locVal) {
-    errorMessage.innerText = "⚠️ Debes rellenar tu nombre, producto, super y ubicación.";
-    errorMessage.style.display = "block";
-    return;
+async function loadFromGitHub() {
+  try {
+    const res = await fetch(`${RAW_URL}?nocache=${Date.now()}`);
+    if (res.ok) {
+      currentItems = await res.json();
+      localStorage.setItem('local_list', JSON.stringify(currentItems));
+      renderUI();
+    } else {
+      loadFromLocal();
+    }
+  } catch (e) {
+    loadFromLocal();
   }
-
-  errorMessage.style.display = "none";
-  localStorage.setItem('lastUser', author);
-
-  const items = getStoredItems();
-  items.push({ author, text, superVal, locVal, completed: false });
-  
-  saveItems(items);
-  renderUI(items);
-
-  productInput.value = '';
-  supermarketSelect.selectedIndex = 0;
-  locationSelect.selectedIndex = 0;
 }
 
-function renderUI(items) {
+function loadFromLocal() {
+  const saved = localStorage.getItem('local_list');
+  currentItems = saved ? JSON.parse(saved) : [];
+  renderUI();
+}
+
+function renderUI() {
   shoppingList.innerHTML = '';
-  items.forEach((item, index) => {
+  currentItems.forEach((item, index) => {
     const li = document.createElement('li');
     li.className = `product-item ${item.completed ? 'completed' : ''}`;
 
     li.innerHTML = `
       <div>
         <span class="title">${item.text}</span>
-        <div class="meta">
-          Añadido por <span class="author">${item.author}</span> • ${item.superVal} (${item.locVal})
-        </div>
+        <div class="meta">${item.superVal} • ${item.locVal}</div>
       </div>
       <div class="actions">
         <button onclick="toggleItem(${index})">✓</button>
@@ -64,29 +57,49 @@ function renderUI(items) {
   });
 }
 
+function addItem() {
+  const text = productInput.value.trim();
+  const superVal = supermarketSelect.value;
+  const locVal = locationSelect.value;
+
+  // Bloquea el envío si falta el súper o la ubicación
+  if (!text || !superVal || !locVal) {
+    errorMessage.innerText = "⚠️ Elige producto, súper y ubicación.";
+    errorMessage.style.display = "block";
+    return;
+  }
+
+  errorMessage.style.display = "none";
+
+  currentItems.push({ text, superVal, locVal, completed: false });
+
+  productInput.value = '';
+  supermarketSelect.selectedIndex = 0;
+  locationSelect.selectedIndex = 0;
+
+  saveState();
+}
+
 function toggleItem(index) {
-  const items = getStoredItems();
-  items[index].completed = !items[index].completed;
-  saveItems(items);
-  renderUI(items);
+  currentItems[index].completed = !currentItems[index].completed;
+  saveState();
 }
 
 function deleteItem(index) {
-  const items = getStoredItems();
-  items.splice(index, 1);
-  saveItems(items);
-  renderUI(items);
+  currentItems.splice(index, 1);
+  saveState();
 }
 
-function getStoredItems() {
-  const saved = localStorage.getItem('lista_compra_shared');
-  return saved ? JSON.parse(saved) : [];
-}
-
-function saveItems(items) {
-  localStorage.setItem('lista_compra_shared', JSON.stringify(items));
-}
-
-function loadItems() {
-  renderUI(getStoredItems());
+function saveState() {
+  localStorage.setItem('local_list', JSON.stringify(currentItems));
+  renderUI();
+  
+  // Descarga automática del archivo actualizado para GitHub
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentItems, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "datos.json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
 }
