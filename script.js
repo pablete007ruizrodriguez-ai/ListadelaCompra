@@ -7,16 +7,17 @@ const productInput = document.getElementById('productInput');
 const supermarketSelect = document.getElementById('supermarketSelect');
 const locationSelect = document.getElementById('locationSelect');
 const addBtn = document.getElementById('addBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
 const shoppingList = document.getElementById('shoppingList');
 const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
 
-// Descarga la lista al entrar y comprueba cambios cada 3 segundos
 fetchItems();
 setInterval(fetchItems, 3000);
 
 addBtn.addEventListener('click', addItem);
+clearAllBtn.addEventListener('click', clearAllItems);
 
 async function fetchItems() {
   try {
@@ -59,7 +60,6 @@ async function addItem() {
   const superVal = supermarketSelect.value;
   const locVal = locationSelect.value;
 
-  // Validación: obliga a poner producto, súper y ubicación
   if (!text || !superVal || !locVal) {
     errorMessage.innerText = "⚠️ Debes escribir un producto, elegir súper y ubicación.";
     errorMessage.style.display = "block";
@@ -87,6 +87,14 @@ async function deleteItem(index) {
   currentItems.splice(index, 1);
   renderUI();
   await saveToCloud();
+}
+
+async function clearAllItems() {
+  if (confirm("¿Estás seguro de que quieres borrar toda la lista?")) {
+    currentItems = [];
+    renderUI();
+    await saveToCloud();
+  }
 }
 
 async function saveToCloud() {

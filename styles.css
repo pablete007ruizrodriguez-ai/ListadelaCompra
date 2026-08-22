@@ -200,3 +200,20 @@ h1 {
 .actions button:hover {
   background: #e2e8f0;
 }
+.clear-btn {
+  width: 100%;
+  margin-top: 20px;
+  background: transparent;
+  color: var(--danger);
+  border: 1px dashed var(--danger);
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
