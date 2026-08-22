@@ -1,103 +1,137 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const productInput = document.getElementById('productInput');
-  const supermarketSelect = document.getElementById('supermarketSelect');
-  const locationSelect = document.getElementById('locationSelect');
-  const addBtn = document.getElementById('addBtn');
-  const shoppingList = document.getElementById('shoppingList');
-  const clearAllBtn = document.getElementById('clearAllBtn');
+const GITHUB_USER = 'pablete007ruizrodriguez-ai';
+const GITHUB_REPO = 'ListadelaCompra';
+const GITHUB_TOKEN = 'PEGA_AQUI_TU_TOKEN_DE_GITHUB';
+const FILE_PATH = 'datos.json';
 
-  loadItems();
+const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
 
-  addBtn.addEventListener('click', addItem);
-  productInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addItem();
-  });
+const userInput = document.getElementById('userInput');
+const productInput = document.getElementById('productInput');
+const supermarketSelect = document.getElementById('supermarketSelect');
+const locationSelect = document.getElementById('locationSelect');
+const addBtn = document.getElementById('addBtn');
+const shoppingList = document.getElementById('shoppingList');
+const errorMessage = document.getElementById('errorMessage');
 
-  function addItem() {
-    const text = productInput.value.trim();
-    if (text === '') return;
+let currentItems = [];
+let fileSHA = '';
 
-    const superVal = supermarketSelect.value;
-    const locVal = locationSelect.value;
+// Cargar usuario local guardado
+userInput.value = localStorage.getItem('lastUser') || '';
 
-    createListItem(text, superVal, locVal, false);
-    saveItems();
+// Cargar datos al entrar y consultar cambios cada 5 segundos
+fetchItems();
+setInterval(fetchItems, 5000);
 
-    productInput.value = '';
-    supermarketSelect.selectedIndex = 0;
-    locationSelect.selectedIndex = 0;
-    productInput.focus();
-  }
+addBtn.addEventListener('click', addItem);
 
-  function createListItem(text, superVal, locVal, completed) {
-    const li = document.createElement('li');
-    if (completed) li.classList.add('completed');
-
-    let tagsText = [superVal, locVal].filter(Boolean).join(' • ');
+async function fetchItems() {
+  try {
+    const res = await fetch(API_URL + `?t=${Date.now()}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    });
     
+    if (res.ok) {
+      const data = await res.json();
+      fileSHA = data.sha;
+      const content = decodeURIComponent(escape(atob(data.content)));
+      currentItems = JSON.parse(content);
+      renderUI();
+    } else if (res.status === 404) {
+      currentItems = [];
+      renderUI();
+    }
+  } catch (err) {
+    console.error("Error al obtener datos:", err);
+  }
+}
+
+function renderUI() {
+  shoppingList.innerHTML = '';
+  currentItems.forEach((item, index) => {
+    const li = document.createElement('li');
+    li.className = `product-item ${item.completed ? 'completed' : ''}`;
+
     li.innerHTML = `
-      <div class="item-text">
-        <strong>${text}</strong>
-        ${tagsText ? `<span class="tags">${tagsText}</span>` : ''}
+      <div>
+        <span class="title">${item.text}</span>
+        <div class="meta">
+          Añadido por <span class="author">${item.author}</span> • ${item.superVal} (${item.locVal})
+        </div>
       </div>
       <div class="actions">
-        <button class="check-btn" title="Tachar">✓</button>
-        <button class="delete-btn" title="Borrar">✕</button>
+        <button onclick="toggleItem(${index})">✓</button>
+        <button onclick="deleteItem(${index})">✕</button>
       </div>
     `;
 
-    li.querySelector('.check-btn').addEventListener('click', () => {
-      li.classList.toggle('completed');
-      saveItems();
-    });
-
-    li.querySelector('.delete-btn').addEventListener('click', () => {
-      li.remove();
-      saveItems();
-    });
-
     shoppingList.appendChild(li);
+  });
+}
+
+async function addItem() {
+  const author = userInput.value.trim();
+  const text = productInput.value.trim();
+  const superVal = supermarketSelect.value;
+  const locVal = locationSelect.value;
+
+  // Validación estricta de campos obligatorios
+  if (!author || !text || !superVal || !locVal) {
+    errorMessage.innerText = "⚠️ Rellena tu nombre, producto, super y ubicación.";
+    errorMessage.style.display = "block";
+    return;
   }
 
-  clearAllBtn.addEventListener('click', () => {
-    shoppingList.innerHTML = '';
-    localStorage.removeItem('shoppingList');
+  errorMessage.style.display = "none";
+  localStorage.setItem('lastUser', author);
+
+  const newItem = { author, text, superVal, locVal, completed: false };
+  currentItems.push(newItem);
+
+  productInput.value = '';
+  supermarketSelect.selectedIndex = 0;
+  locationSelect.selectedIndex = 0;
+
+  renderUI();
+  await saveToGitHub("Añadido producto por " + author);
+}
+
+async function toggleItem(index) {
+  currentItems[index].completed = !currentItems[index].completed;
+  renderUI();
+  await saveToGitHub("Estado cambiado");
+}
+
+async function deleteItem(index) {
+  currentItems.splice(index, 1);
+  renderUI();
+  await saveToGitHub("Producto borrado");
+}
+
+async function saveToGitHub(commitMessage) {
+  const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentItems, null, 2))));
+
+  const bodyData = {
+    message: commitMessage,
+    content: contentEncoded,
+    branch: 'main'
+  };
+
+  if (fileSHA) {
+    bodyData.sha = fileSHA;
+  }
+
+  const res = await fetch(API_URL, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(bodyData)
   });
 
-  function saveItems() {
-    const items = [];
-    shoppingList.querySelectorAll('li').forEach(li => {
-      const text = li.querySelector('strong').innerText;
-      const tagsSpan = li.querySelector('.tags');
-      let superVal = '', locVal = '';
-      
-      if (tagsSpan) {
-        const parts = tagsSpan.innerText.split(' • ');
-        if (parts.length === 2) {
-          superVal = parts[0];
-          locVal = parts[1];
-        } else if (parts.length === 1) {
-          if (['Mercadona', 'Eroski', 'BM'].includes(parts[0])) superVal = parts[0];
-          else locVal = parts[0];
-        }
-      }
-
-      items.push({
-        text,
-        superVal,
-        locVal,
-        completed: li.classList.contains('completed')
-      });
-    });
-    localStorage.setItem('shoppingList', JSON.stringify(items));
+  if (res.ok) {
+    const responseData = await res.json();
+    fileSHA = responseData.content.sha;
   }
-
-  function loadItems() {
-    const saved = localStorage.getItem('shoppingList');
-    if (!saved) return;
-    const items = JSON.parse(saved);
-    items.forEach(item => {
-      createListItem(item.text, item.superVal, item.locVal, item.completed);
-    });
-  }
-});
+}

@@ -5,36 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de la Compra</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <div class="container">
-    <h1>Lista de la Compra</h1>
+  <div class="app-card">
+    <header class="app-header">
+      <div class="status-badge"><span class="pulse"></span> Sincronizado con GitHub</div>
+      <h1>Lista de la Compra 🛒</h1>
+    </header>
 
     <div class="input-card">
-      <div class="row-top">
-        <input type="text" id="productInput" placeholder="Nombre del producto...">
-        <button id="addBtn">+</button>
+      <div class="input-group">
+        <input type="text" id="userInput" placeholder="¿Quién eres? (ej. Pablo)" class="styled-input highlight-input">
       </div>
-      <div class="row-bottom">
-        <select id="supermarketSelect">
-          <option value="" disabled selected>▾ Supermercado</option>
+
+      <div class="input-group">
+        <input type="text" id="productInput" placeholder="¿Qué necesitas comprar?" class="styled-input">
+      </div>
+      
+      <div class="row-selects">
+        <select id="supermarketSelect" class="styled-select">
+          <option value="" disabled selected>Supermercado *</option>
           <option value="Mercadona">Mercadona</option>
           <option value="Eroski">Eroski</option>
           <option value="BM">BM</option>
         </select>
 
-        <select id="locationSelect">
-          <option value="" disabled selected>▾ Ubicación</option>
+        <select id="locationSelect" class="styled-select">
+          <option value="" disabled selected>Ubicación *</option>
           <option value="Ranera">Ranera</option>
           <option value="Barakaldo">Barakaldo</option>
         </select>
       </div>
+
+      <button id="addBtn" class="primary-btn">Añadir a la lista</button>
+      <p id="errorMessage" class="error-msg"></p>
     </div>
 
-    <ul id="shoppingList"></ul>
-
-    <button id="clearAllBtn" class="clear-all">Borrar todo</button>
+    <ul id="shoppingList" class="product-list"></ul>
   </div>
 
   <script src="script.js"></script>
