@@ -1,4 +1,7 @@
-const RAW_URL = 'https://raw.githubusercontent.com/pablete007ruizrodriguez-ai/ListadelaCompra/main/datos.json';
+const BIN_ID = '6a8a35b3da38895dfe054758';
+const MASTER_KEY = '$2a$10$bfoIuap49SbeuQPD8OeM2uhbtgLp4UeJlxu6l86raKDguIbyLgwxq';
+
+const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 const productInput = document.getElementById('productInput');
 const supermarketSelect = document.getElementById('supermarketSelect');
@@ -9,31 +12,25 @@ const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
 
-// Cargar la lista al abrir y reconsultar cada 5 segundos
-loadFromGitHub();
-setInterval(loadFromGitHub, 5000);
+// Descarga la lista al entrar y comprueba cambios cada 3 segundos
+fetchItems();
+setInterval(fetchItems, 3000);
 
 addBtn.addEventListener('click', addItem);
 
-async function loadFromGitHub() {
+async function fetchItems() {
   try {
-    const res = await fetch(`${RAW_URL}?nocache=${Date.now()}`);
+    const res = await fetch(`${API_URL}/latest`, {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
     if (res.ok) {
-      currentItems = await res.json();
-      localStorage.setItem('local_list', JSON.stringify(currentItems));
+      const data = await res.json();
+      currentItems = data.record || [];
       renderUI();
-    } else {
-      loadFromLocal();
     }
-  } catch (e) {
-    loadFromLocal();
+  } catch (err) {
+    console.error("Error al obtener datos:", err);
   }
-}
-
-function loadFromLocal() {
-  const saved = localStorage.getItem('local_list');
-  currentItems = saved ? JSON.parse(saved) : [];
-  renderUI();
 }
 
 function renderUI() {
@@ -57,49 +54,52 @@ function renderUI() {
   });
 }
 
-function addItem() {
+async function addItem() {
   const text = productInput.value.trim();
   const superVal = supermarketSelect.value;
   const locVal = locationSelect.value;
 
-  // Bloquea el envío si falta el súper o la ubicación
+  // Validación: obliga a poner producto, súper y ubicación
   if (!text || !superVal || !locVal) {
-    errorMessage.innerText = "⚠️ Elige producto, súper y ubicación.";
+    errorMessage.innerText = "⚠️ Debes escribir un producto, elegir súper y ubicación.";
     errorMessage.style.display = "block";
     return;
   }
 
   errorMessage.style.display = "none";
-
   currentItems.push({ text, superVal, locVal, completed: false });
 
   productInput.value = '';
   supermarketSelect.selectedIndex = 0;
   locationSelect.selectedIndex = 0;
 
-  saveState();
-}
-
-function toggleItem(index) {
-  currentItems[index].completed = !currentItems[index].completed;
-  saveState();
-}
-
-function deleteItem(index) {
-  currentItems.splice(index, 1);
-  saveState();
-}
-
-function saveState() {
-  localStorage.setItem('local_list', JSON.stringify(currentItems));
   renderUI();
-  
-  // Descarga automática del archivo actualizado para GitHub
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentItems, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", "datos.json");
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
+  await saveToCloud();
+}
+
+async function toggleItem(index) {
+  currentItems[index].completed = !currentItems[index].completed;
+  renderUI();
+  await saveToCloud();
+}
+
+async function deleteItem(index) {
+  currentItems.splice(index, 1);
+  renderUI();
+  await saveToCloud();
+}
+
+async function saveToCloud() {
+  try {
+    await fetch(API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      },
+      body: JSON.stringify(currentItems)
+    });
+  } catch (err) {
+    console.error("Error al guardar:", err);
+  }
 }
