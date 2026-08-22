@@ -13,6 +13,7 @@ const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
 
+// Consulta la lista automáticamente sin descargar nada
 fetchItems();
 setInterval(fetchItems, 3000);
 
@@ -90,11 +91,9 @@ async function deleteItem(index) {
 }
 
 async function clearAllItems() {
-  if (confirm("¿Estás seguro de que quieres borrar toda la lista?")) {
-    currentItems = [];
-    renderUI();
-    await saveToCloud();
-  }
+  currentItems = [];
+  renderUI();
+  await saveToCloud();
 }
 
 async function saveToCloud() {
