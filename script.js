@@ -12,12 +12,14 @@ const shoppingList = document.getElementById('shoppingList');
 const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
-let isSaving = false;
+let isSaving = false; // Bloquea la lectura mientras se guardan cambios
 
-// Consulta cambios en la nube cada 3 segundos
+// Consulta la nube cada 3 segundos solo si no estamos guardando
 fetchItems();
 setInterval(() => {
-  if (!isSaving) fetchItems();
+  if (!isSaving) {
+    fetchItems();
+  }
 }, 3000);
 
 addBtn.addEventListener('click', addItem);
@@ -30,14 +32,16 @@ async function fetchItems() {
     });
     if (res.ok) {
       const data = await res.json();
-      // Mantiene la lista limpia si la nube devuelve un arreglo o estructura vacía
-      if (Array.isArray(data.record)) {
-        currentItems = data.record;
-      } else if (data.record && Array.isArray(data.record.items)) {
+      
+      // Maneja tanto un array directo como un objeto con propiedad items
+      if (data.record && Array.isArray(data.record.items)) {
         currentItems = data.record.items;
+      } else if (Array.isArray(data.record)) {
+        currentItems = data.record;
       } else {
         currentItems = [];
       }
+      
       renderUI();
     }
   } catch (err) {
@@ -107,20 +111,22 @@ async function clearAllItems() {
 }
 
 async function saveToCloud() {
-  isSaving = true;
+  isSaving = true; // Activa el bloqueo
   try {
-    // Guarda dentro de un objeto estructurado para que JSONbin acepte colecciones vacías
     await fetch(API_URL, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'X-Master-Key': MASTER_KEY
       },
-      body: JSON.stringify({ items: currentItems })
+      body: JSON.stringify({ items: currentItems }) // Guarda estructurado
     });
   } catch (err) {
     console.error("Error al guardar:", err);
   } finally {
-    isSaving = false;
+    // Mantiene el bloqueo 2.5 segundos extra para que la nube actualice completamente
+    setTimeout(() => {
+      isSaving = false;
+    }, 2500);
   }
 }

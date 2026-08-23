@@ -133,12 +133,11 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   font-weight: bold;
 }
 
-/* Botón Borrar todo abajo */
 .danger-btn {
   width: 100%;
   margin-top: 20px;
-  background: var(--danger);
-  color: #ffffff;
+  background-color: #dc2626; /* Rojo */
+  color: #ffffff;            /* Letras blancas */
   border: none;
   padding: 14px;
   border-radius: 12px;
@@ -149,5 +148,5 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
 }
 
 .danger-btn:hover {
-  background: var(--danger-hover);
+  background-color: #b91c1c;
 }
