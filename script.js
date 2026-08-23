@@ -13,7 +13,7 @@ const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
 
-// Consulta la lista automáticamente sin descargar nada
+// Consulta la nube cada 3 segundos sin descargar ningún archivo
 fetchItems();
 setInterval(fetchItems, 3000);
 
@@ -31,7 +31,7 @@ async function fetchItems() {
       renderUI();
     }
   } catch (err) {
-    console.error("Error al obtener datos:", err);
+    console.error("Error al sincronizar:", err);
   }
 }
 
