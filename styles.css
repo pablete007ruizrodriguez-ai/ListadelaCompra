@@ -1,15 +1,19 @@
 :root {
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   --card-bg: rgba(255, 255, 255, 0.96);
-  --primary: #4f46e5;
+  --primary: #3b82f6;
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --danger: #dc2626;
-  --danger-hover: #b91c1c;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
   --border: #e2e8f0;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -17,46 +21,54 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 20px 12px;
+  align-items: center;
+  padding: 16px;
 }
 
 .app-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--card-bg);
   padding: 24px;
   border-radius: 24px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .badge {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--primary);
-  background: #e0e7ff;
+  color: #2563eb;
+  background: #dbeafe;
   padding: 6px 12px;
   border-radius: 20px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .pulse {
-  width: 7px; height: 7px;
-  background: var(--primary);
+  width: 8px; 
+  height: 8px;
+  background: #2563eb;
   border-radius: 50%;
   animation: pulse 1.6s infinite;
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
-  70% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
 
-h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+h1 { 
+  font-size: 26px; 
+  font-weight: 700; 
+  color: var(--text-main); 
+  margin-bottom: 16px;
+}
 
 .input-card {
   display: flex;
@@ -66,20 +78,29 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  margin: 16px 0 20px 0;
+  margin-bottom: 20px;
 }
 
 .styled-input, .styled-select {
   width: 100%;
-  padding: 14px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
   font-size: 14px;
   outline: none;
   background: white;
+  color: var(--text-main);
 }
 
-.row-selects { display: flex; gap: 10px; }
+.row-selects { 
+  display: flex; 
+  gap: 8px; 
+}
+
+.row-selects select {
+  flex: 1;
+  min-width: 0; /* Previene el desbordamiento en móviles */
+}
 
 .primary-btn {
   background: var(--primary);
@@ -90,6 +111,12 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.primary-btn:hover {
+  background: #2563eb;
 }
 
 .error-msg {
@@ -105,13 +132,14 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   display: flex; 
   flex-direction: column; 
   gap: 10px; 
+  margin-bottom: 16px;
 }
 
 .product-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 12px 14px;
   background: white;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -120,24 +148,23 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
 .product-item.completed { opacity: 0.5; }
 .product-item.completed .title { text-decoration: line-through; }
 .title { font-weight: 600; font-size: 15px; color: var(--text-main); }
-.meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 12px; align-items: center; }
 .actions button { 
-  background: #f1f5f9; 
+  background: transparent; 
   border: none; 
-  width: 32px; 
-  height: 32px; 
-  border-radius: 8px; 
+  font-size: 16px;
   cursor: pointer; 
-  font-weight: bold;
+  color: #334155;
+  padding: 4px;
 }
 
+/* Botón Borrar todo abajo del todo */
 .danger-btn {
   width: 100%;
-  margin-top: 20px;
-  background-color: #dc2626; /* Rojo */
-  color: #ffffff;            /* Letras blancas */
+  background: var(--danger);
+  color: #ffffff;
   border: none;
   padding: 14px;
   border-radius: 12px;
@@ -145,8 +172,31 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
+  display: block;
 }
 
 .danger-btn:hover {
-  background-color: #b91c1c;
+  background: var(--danger-hover);
+}
+
+/* Ajustes responsivos móviles */
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+    align-items: flex-start;
+  }
+  
+  .app-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .styled-input, .styled-select {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .row-selects {
+    flex-direction: row; /* Mantiene supermercado y ubicación lado a lado */
+  }
 }
