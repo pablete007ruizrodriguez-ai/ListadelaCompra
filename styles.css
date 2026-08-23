@@ -133,7 +133,7 @@ h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
   font-weight: bold;
 }
 
-/* Botón Borrar todo: Fondo rojo y letras blancas abajo del todo */
+/* Botón Borrar todo abajo */
 .danger-btn {
   width: 100%;
   margin-top: 20px;

@@ -12,10 +12,13 @@ const shoppingList = document.getElementById('shoppingList');
 const errorMessage = document.getElementById('errorMessage');
 
 let currentItems = [];
+let isSaving = false;
 
-// Consulta la nube cada 3 segundos sin descargar ningún archivo
+// Consulta cambios en la nube cada 3 segundos
 fetchItems();
-setInterval(fetchItems, 3000);
+setInterval(() => {
+  if (!isSaving) fetchItems();
+}, 3000);
 
 addBtn.addEventListener('click', addItem);
 clearAllBtn.addEventListener('click', clearAllItems);
@@ -27,11 +30,18 @@ async function fetchItems() {
     });
     if (res.ok) {
       const data = await res.json();
-      currentItems = data.record || [];
+      // Mantiene la lista limpia si la nube devuelve un arreglo o estructura vacía
+      if (Array.isArray(data.record)) {
+        currentItems = data.record;
+      } else if (data.record && Array.isArray(data.record.items)) {
+        currentItems = data.record.items;
+      } else {
+        currentItems = [];
+      }
       renderUI();
     }
   } catch (err) {
-    console.error("Error al sincronizar:", err);
+    console.error("Error al obtener datos:", err);
   }
 }
 
@@ -97,16 +107,20 @@ async function clearAllItems() {
 }
 
 async function saveToCloud() {
+  isSaving = true;
   try {
+    // Guarda dentro de un objeto estructurado para que JSONbin acepte colecciones vacías
     await fetch(API_URL, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'X-Master-Key': MASTER_KEY
       },
-      body: JSON.stringify(currentItems)
+      body: JSON.stringify({ items: currentItems })
     });
   } catch (err) {
     console.error("Error al guardar:", err);
+  } finally {
+    isSaving = false;
   }
 }
